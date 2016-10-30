@@ -1,0 +1,1 @@
+deleter: ruby deleter.rb
