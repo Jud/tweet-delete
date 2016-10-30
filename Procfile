@@ -1,1 +1,1 @@
-deleter: ruby deleter.rb
+deleter: ruby ./deleter.rb
