@@ -45,24 +45,36 @@ def client.get_all_favorites(user)
 end
 
 while true
-  client.get_all_tweets(USERNAME).each do |tweet|
-    if (Time.now.to_i - tweet.created_at.to_i) / (24 * 60 * 60) > DAYS_SAVED
-      begin
-        client.destroy_tweet tweet.id
-      rescue Twitter::Error::TooManyRequests => error
-        sleep error.rate_limit.reset_in + 1
-        retry
+  # An array of tweet ids by USERNAME that have
+  # also been favorited by USERNAME (mark to keep)
+  favorite_ids = []
+
+  client.get_all_favorites(USERNAME).each do |tweet|
+    # If you favorited your own tweet, we'll keep it around
+    # and we need to keep the favorite around as well.
+    if tweet.user.screen_name.downcase == USERNAME.downcase
+      favorite_ids << tweet.id
+    else
+      if (Time.now.to_i - tweet.created_at.to_i) / (24 * 60 * 60) > DAYS_SAVED
+        begin
+          client.unfavorite(tweet.id)
+        rescue Twitter::Error::TooManyRequests => error
+          sleep error.rate_limit.reset_in + 1
+          retry
+        end
       end
     end
   end
 
-  client.get_all_favorites(USERNAME).each do |tweet|
-    if (Time.now.to_i - tweet.created_at.to_i) / (24 * 60 * 60) > DAYS_SAVED
-      begin
-        client.unfavorite(tweet.id)
-      rescue Twitter::Error::TooManyRequests => error
-        sleep error.rate_limit.reset_in + 1
-        retry
+  client.get_all_tweets(USERNAME).each do |tweet|
+    if !favorite_ids.include? tweet.id
+      if (Time.now.to_i - tweet.created_at.to_i) / (24 * 60 * 60) > DAYS_SAVED
+        begin
+          client.destroy_tweet tweet.id
+        rescue Twitter::Error::TooManyRequests => error
+          sleep error.rate_limit.reset_in + 1
+          retry
+        end
       end
     end
   end
