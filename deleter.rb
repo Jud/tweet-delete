@@ -2,7 +2,7 @@ require 'twitter'
 require "json"
 
 USERNAME = ENV['USERNAME']
-DAYS_SAVED = ENV['TTL']
+DAYS_SAVED = ENV['TTL'].to_f
 
 # Setup the Twitter client with credentials
 client = Twitter::REST::Client.new do |config|
